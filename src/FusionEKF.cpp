@@ -85,24 +85,16 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
                measurement_pack.raw_measurements_[1], 
                1,
                1;
-    
-    previous_timestamp_ = measurement_pack.timestamp_;
-  
-  // compute the time elapsed between the current and previous measurements
-  // dt - expressed in seconds
-  float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
-  previous_timestamp_ = measurement_pack.timestamp_;
-  
+
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // TODO: Convert radar from polar to cartesian coordinates 
       //         and initialize state.
-
+	  // transform z coordinates to cartesian coordinates 
     
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       // TODO: Initialize state.
       
-
     }
 
     // done initializing, no need to predict or update
@@ -157,13 +149,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    */
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-    // TODO: Radar updates
-
+    // TODO: Radar updates => "normal" Kalman Filter
+    ekf_.Update(z);
 
   } else {
-    // TODO: Laser updates
-    
-
+    // TODO: Laser updates => extended Kalman Filter
+     ekf_.UpdateEKF(z);
   }
 
   // print the output
