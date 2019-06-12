@@ -14,7 +14,6 @@ using std::vector;
  */
 FusionEKF::FusionEKF() {
   is_initialized_ = false;
-
   previous_timestamp_ = 0;
 
   // initializing matrices
@@ -22,6 +21,8 @@ FusionEKF::FusionEKF() {
   R_radar_ = MatrixXd(3, 3);
   H_laser_ = MatrixXd(2, 4);
   Hj_ = MatrixXd(3, 4);
+  
+  x_ = = VectorXd(4);
 
   //measurement covariance matrix - laser
   R_laser_ << 0.0225, 0,
@@ -36,8 +37,29 @@ FusionEKF::FusionEKF() {
    * TODO: Finish initializing the FusionEKF.
    * TODO: Set the process and measurement noises
    */
-
-
+  
+  // state covariance matrix P
+  P_ = MatrixXd(4, 4);
+  P_ << 1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1000, 0,
+        0, 0, 0, 1000;
+  
+  // measurement matrix
+  H_ = MatrixXd(2, 4);
+  H_ << 1, 0, 0, 0,
+        0, 1, 0, 0;
+  
+  // the initial transition matrix F_
+  F_ = MatrixXd(4, 4);
+  F_ << 1, 0, 1, 0,
+        0, 1, 0, 1,
+        0, 0, 1, 0,
+        0, 0, 0, 1;
+  
+    // set the acceleration noise components
+  noise_ax = 9;
+  noise_ay = 9;
 }
 
 /**
@@ -58,16 +80,52 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
     // first measurement
     cout << "EKF: " << endl;
-    ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 1, 1, 1, 1;
-
+    //ekf_.x_ = VectorXd(4);
+    ekf_.x_ << measurement_pack.raw_measurements_[0], 
+               measurement_pack.raw_measurements_[1], 
+               1,
+               1;
+    
+    previous_timestamp_ = measurement_pack.timestamp_;
+    is_initialized_ = true;
+    return;
+  }
+  
+  // compute the time elapsed between the current and previous measurements
+  // dt - expressed in seconds
+  float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
+  previous_timestamp_ = measurement_pack.timestamp_;
+  
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // TODO: Convert radar from polar to cartesian coordinates 
       //         and initialize state.
+      
+      
+      
 
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       // TODO: Initialize state.
+      
+  	  // 1. Modify the F matrix so that the time is integrated
+   		 kf_.F_ << 1, 0, dt, 0,
+        	       0, 1, 0, dt,
+             	   0, 0, 1, 0,
+              	   0, 0, 0, 1;
+  // 2. Set the process covariance matrix Q
+  double delta_t_4th_power_sigma_ax = pow(dt,4)/4*noise_ax;
+  double delta_t_3rd_power_sigma_ax = pow(dt,3)/2*noise_ax;
+  double delta_t_2nd_power_sigma_ax = pow(dt,2)  *noise_ax;
+  
+  double delta_t_4th_power_sigma_ay = pow(dt,4)/4*noise_ay;
+  double delta_t_3rd_power_sigma_ay = pow(dt,3)/2*noise_ay;
+  double delta_t_2nd_power_sigma_ay = pow(dt,2)  *noise_ay;
+  
+  kf_.Q_ = MatrixXd(4, 4);
+  kf_.Q_ << delta_t_4th_power_sigma_ax, 0, delta_t_3rd_power_sigma_ax, 0,
+            0, delta_t_4th_power_sigma_ay, 0, delta_t_3rd_power_sigma_ay,
+            delta_t_3rd_power_sigma_ax, 0, delta_t_2nd_power_sigma_ax,0,
+            0,delta_t_3rd_power_sigma_ay,0, delta_t_2nd_power_sigma_ay; 
 
     }
 
