@@ -38,12 +38,6 @@ FusionEKF::FusionEKF() {
    * TODO: Set the process and measurement noises
    */
   
-  // state covariance matrix P
-  P_ = MatrixXd(4, 4);
-  P_ << 1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1000, 0,
-        0, 0, 0, 1000;
   
   // measurement matrix
   H_ = MatrixXd(2, 4);
@@ -60,6 +54,8 @@ FusionEKF::FusionEKF() {
   // set the acceleration noise components
   noise_ax = 9;
   noise_ay = 9;
+  
+  Q_ = MatrixXd(4, 4);
 }
 
 /**
@@ -85,11 +81,20 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
                measurement_pack.raw_measurements_[1], 
                1,
                1;
+        
+      //covariance matrix P
+  	P_ = MatrixXd(4, 4);
+  	P_ << 1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, 1000, 0,
+          0, 0, 0, 1000;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // TODO: Convert radar from polar to cartesian coordinates 
       //         and initialize state.
 	  // transform z coordinates to cartesian coordinates 
+      
+      measurement_pack.raw_measurements_
     
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
@@ -130,8 +135,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   double delta_t_3rd_power_sigma_ay = pow(dt,3)/2*noise_ay;
   double delta_t_2nd_power_sigma_ay = pow(dt,2)  *noise_ay;
   
-  kf_.Q_ = MatrixXd(4, 4);
-  kf_.Q_ << delta_t_4th_power_sigma_ax, 0, delta_t_3rd_power_sigma_ax, 0,
+  //Q_ = MatrixXd(4, 4);
+  Q_ << delta_t_4th_power_sigma_ax, 0, delta_t_3rd_power_sigma_ax, 0,
             0, delta_t_4th_power_sigma_ay, 0, delta_t_3rd_power_sigma_ay,
             delta_t_3rd_power_sigma_ax, 0, delta_t_2nd_power_sigma_ax,0,
             0,delta_t_3rd_power_sigma_ay,0, delta_t_2nd_power_sigma_ay; 
@@ -150,11 +155,15 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // TODO: Radar updates => "normal" Kalman Filter
-    ekf_.Update(z);
+    ekf_.Update(measurement_pack.raw_measurements_);
+    x_ = ekf_.x_;
+    P_ = ekf_.P_;
 
   } else {
     // TODO: Laser updates => extended Kalman Filter
-     ekf_.UpdateEKF(z);
+     ekf_.UpdateEKF(measurement_pack.raw_measurements_);
+    x_ = ekf_.x_;
+    P_ = ekf_.P_;
   }
 
   // print the output
