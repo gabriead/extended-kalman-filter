@@ -18,17 +18,15 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
     VectorXd rmse(4);
   	rmse << 0,0,0,0;
   
-    if (estimations.size() != ground_truth.size()
-      || estimations.size() == 0) {
-    cout << "Invalid estimation or ground_truth data" << endl;
-    return rmse;
-  }
+    if (estimations.size() != ground_truth.size() || estimations.size() == 0)
+    {
+      cout << "Invalid estimation or ground_truth data" << endl;
+      return rmse;
+  	}
 
   // accumulate squared residuals
   for (unsigned int i=0; i < estimations.size(); ++i) {
-
     VectorXd residual = estimations[i] - ground_truth[i];
-
     // coefficient-wise multiplication
     residual = residual.array()*residual.array();
     rmse += residual;
@@ -58,9 +56,11 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 
   // TODO: YOUR CODE HERE 
 
-  // check division by zero
   if(px==0 && py==0)
-   cout<< "CalculateJacobian() - Error - Division by zero"<< endl;
+  {
+    cout<< "CalculateJacobian() - Error - Division by zero"<< endl;
+    return Hj;
+  }
    
    double sqrt_px_py_pow_2 = sqrt(pow(px,2) + pow(py,2));
    double px_py_pow_2 = pow(px,2) + pow(py,2);
@@ -73,8 +73,5 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
          -(py/px_py_pow_2)  , px/px_py_pow_2     , 0,0,
          py_compound_numerator/px_py_pow_3_2,px_compound_numerator/px_py_pow_3_2,px/sqrt_px_py_pow_2, py/sqrt_px_py_pow_2;  
   
-  // compute the Jacobian matrix
-
   return Hj;
-  
 }
