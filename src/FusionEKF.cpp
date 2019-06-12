@@ -57,7 +57,7 @@ FusionEKF::FusionEKF() {
         0, 0, 1, 0,
         0, 0, 0, 1;
   
-    // set the acceleration noise components
+  // set the acceleration noise components
   noise_ax = 9;
   noise_ay = 9;
 }
@@ -87,9 +87,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
                1;
     
     previous_timestamp_ = measurement_pack.timestamp_;
-    is_initialized_ = true;
-    return;
-  }
   
   // compute the time elapsed between the current and previous measurements
   // dt - expressed in seconds
@@ -99,33 +96,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // TODO: Convert radar from polar to cartesian coordinates 
       //         and initialize state.
-      
-      
-      
 
+    
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       // TODO: Initialize state.
       
-  	  // 1. Modify the F matrix so that the time is integrated
-   		 kf_.F_ << 1, 0, dt, 0,
-        	       0, 1, 0, dt,
-             	   0, 0, 1, 0,
-              	   0, 0, 0, 1;
-  // 2. Set the process covariance matrix Q
-  double delta_t_4th_power_sigma_ax = pow(dt,4)/4*noise_ax;
-  double delta_t_3rd_power_sigma_ax = pow(dt,3)/2*noise_ax;
-  double delta_t_2nd_power_sigma_ax = pow(dt,2)  *noise_ax;
-  
-  double delta_t_4th_power_sigma_ay = pow(dt,4)/4*noise_ay;
-  double delta_t_3rd_power_sigma_ay = pow(dt,3)/2*noise_ay;
-  double delta_t_2nd_power_sigma_ay = pow(dt,2)  *noise_ay;
-  
-  kf_.Q_ = MatrixXd(4, 4);
-  kf_.Q_ << delta_t_4th_power_sigma_ax, 0, delta_t_3rd_power_sigma_ax, 0,
-            0, delta_t_4th_power_sigma_ay, 0, delta_t_3rd_power_sigma_ay,
-            delta_t_3rd_power_sigma_ax, 0, delta_t_2nd_power_sigma_ax,0,
-            0,delta_t_3rd_power_sigma_ay,0, delta_t_2nd_power_sigma_ay; 
 
     }
 
@@ -144,7 +120,30 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    * TODO: Update the process noise covariance matrix.
    * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
-
+  
+    float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
+  	previous_timestamp_ = measurement_pack.timestamp_;
+  
+     F_ << 1, 0, dt, 0,
+           0, 1, 0, dt,
+           0, 0, 1, 0,
+           0, 0, 0, 1;
+  
+    // 2. Set the process covariance matrix Q
+  double delta_t_4th_power_sigma_ax = pow(dt,4)/4*noise_ax;
+  double delta_t_3rd_power_sigma_ax = pow(dt,3)/2*noise_ax;
+  double delta_t_2nd_power_sigma_ax = pow(dt,2)  *noise_ax;
+  
+  double delta_t_4th_power_sigma_ay = pow(dt,4)/4*noise_ay;
+  double delta_t_3rd_power_sigma_ay = pow(dt,3)/2*noise_ay;
+  double delta_t_2nd_power_sigma_ay = pow(dt,2)  *noise_ay;
+  
+  kf_.Q_ = MatrixXd(4, 4);
+  kf_.Q_ << delta_t_4th_power_sigma_ax, 0, delta_t_3rd_power_sigma_ax, 0,
+            0, delta_t_4th_power_sigma_ay, 0, delta_t_3rd_power_sigma_ay,
+            delta_t_3rd_power_sigma_ax, 0, delta_t_2nd_power_sigma_ax,0,
+            0,delta_t_3rd_power_sigma_ay,0, delta_t_2nd_power_sigma_ay; 
+ 
   ekf_.Predict();
 
   /**
@@ -160,8 +159,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // TODO: Radar updates
 
+
   } else {
     // TODO: Laser updates
+    
 
   }
 
