@@ -44,10 +44,9 @@ class FusionEKF {
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
   Eigen::MatrixXd Hj_;
-
-  //acceleration noise components
-  float noise_ax;
-  float noise_ay;
+  Eigen::MatrixXd P_;
+  Eigen::MatrixXd F_;
+  
 };
 
 #endif // FusionEKF_H_

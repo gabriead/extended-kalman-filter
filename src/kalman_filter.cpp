@@ -1,8 +1,11 @@
 #include "kalman_filter.h"
 #include <math.h>  
+#include <iostream>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
+using std::cout;
+using std::endl;
 /* 
  * Please note that the Eigen library does not initialize 
  *   VectorXd or MatrixXd objects with zeros upon creation.
@@ -26,16 +29,23 @@ void KalmanFilter::Predict() {
   /**
    * TODO: predict the state
    */
+  cout<< "Prediction"<< endl;
   x_ = F_ * x_;
   MatrixXd Ft = F_.transpose();
   P_ = F_ * P_ * Ft + Q_;
+  
+  cout<< "Prediction x_"<< x_ << endl;
+  cout<< "Prediction P"<< P_ << endl;
+  cout<< "Prediction F"<< F_ << endl;
+  
+  cout<< "Done predicting"<< endl;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
   /**
    * TODO: update the state by using Kalman Filter equations
    */
-  
+    cout<< "Updating laser"<< endl;
     VectorXd y = z - H_ * x_;
     MatrixXd Ht = H_.transpose();
     MatrixXd S = H_ * P_ * Ht + R_;
@@ -49,6 +59,8 @@ void KalmanFilter::Update(const VectorXd &z) {
     MatrixXd I = MatrixXd::Identity(x_size, x_size);
     
     P_ = (I - K * H_) * P_;
+  
+   cout<< "Done updating laser"<< endl;
 
 }
 
@@ -57,18 +69,29 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
    * TODO: update the state by using Extended Kalman Filter equations
    */
   
+  cout<< "Updating radar"<< endl;
   float rho = sqrt(x_(0)*x_(0) + x_(1)*x_(1));
   float phi = atan2(x_(1), x_(0));
   float rho_dot;
   
+  //Division by zero
   if (fabs(rho) < 0.0001) {
     rho_dot = 0;
   } else {
     rho_dot = (x_(0)*x_(2) + x_(1)*x_(3))/rho;
   }
-  
-  VectorXd z_pred = H_ * x_;
+
+  VectorXd z_pred(3);
+  z_pred << rho, phi, rho_dot;
   VectorXd y = z - z_pred;
+  
+  while (y(1)>M_PI) {
+    y(1) -= 2 * M_PI;
+  }
+  while (y(1)<-M_PI) {
+    y(1) += 2 * M_PI;
+  }
+  
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();
@@ -77,7 +100,10 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
   //new estimate
   x_ = x_ + (K * y);
+  cout<< "Updating x_"<<x_<< endl;
+  
   long x_size = x_.size();
   MatrixXd I = MatrixXd::Identity(x_size, x_size);
   P_ = (I - K * H_) * P_;
+  cout<< "Done updating radar"<< endl;
 }
